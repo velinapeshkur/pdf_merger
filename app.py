@@ -1,3 +1,6 @@
+import os
+import platform
+import subprocess
 from pypdf import PdfWriter
 from pathlib import Path
 from itertools import batched
@@ -15,16 +18,39 @@ def batch_files(folder_path: str, files_per_file: int) -> list[tuple[str]]:
     return files_for_merge    
 
 
-def create_folder_for_merged_files(folder_path: str) -> Path:
-    original_folder = Path(folder_path)
-    new_folder = Path(f"{original_folder.parent}/merged/")
-    new_folder.mkdir(parents=True, exist_ok=True)
-    return new_folder
+def create_output_dir(folder_path: str) -> Path:
+    input_dir = Path(folder_path)
+    output_dir = Path(f"{input_dir.parent}/merged/")
+    
+    if not output_dir.exists():
+        output_dir.mkdir(parents=True, exist_ok=True)
+        return output_dir
+    
+    else:
+        counter = 1
+        
+        while True:
+            output_dir = Path(f"{input_dir.parent}/merged ({counter})/")
+
+            if not output_dir.exists():
+                output_dir.mkdir(parents=True, exist_ok=True)
+                return output_dir
+            counter += 1
+
+
+def open_output_dir(output_dir):
+    match platform.system():
+        case "Windows":
+            os.startfile(output_dir)
+        case "Darwin": # macOS
+            subprocess.run(["open", output_dir])
+        case _: # Linux
+            subprocess.run(["xdg-open", output_dir])
     
 
 def merge_pdf(folder_path: str, files_per_file: int) -> None: 
     files_for_merge = batch_files(folder_path, files_per_file)
-    new_folder = create_folder_for_merged_files(folder_path)
+    output_dir = create_output_dir(folder_path)
 
     # Merge each row of files to a new PDF file
     for row in files_for_merge:
@@ -34,5 +60,7 @@ def merge_pdf(folder_path: str, files_per_file: int) -> None:
         for pdf in row:
             merger.append(f"{folder_path}/{pdf}")
         
-        with open(f"{new_folder.resolve()}/{pdf_name}.pdf", "wb") as f:
+        with open(f"{output_dir.resolve()}/{pdf_name}.pdf", "wb") as f:
             merger.write(f)
+    
+    open_output_dir(output_dir)
