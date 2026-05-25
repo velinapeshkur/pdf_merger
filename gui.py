@@ -1,4 +1,5 @@
 import PySimpleGUI as sg
+from app import merge_pdf
 
 
 sg.theme("LightBrown1")
@@ -7,8 +8,8 @@ label1 = sg.Text("Select folder:")
 input1 = sg.Input()
 choose_button = sg.FolderBrowse("Choose", key="folder")
 
-label2 = sg.Text("Pages per file:")
-input2 = sg.Input(key="pages")
+label2 = sg.Text("Files per output file:")
+input2 = sg.Input(key="files")
 
 merge_button = sg.Button("Merge")
 output_label = sg.Text(key="output")
@@ -25,6 +26,9 @@ while True:
         case sg.WIN_CLOSED:
             break
         case _:
-            pass
+            folder_path = values["folder"]
+            files_per_file = int(values["files"])
+            merge_pdf(folder_path, files_per_file)
+            window["output"].update(value="Merge completed", text_color="green")
 
 window.close()
