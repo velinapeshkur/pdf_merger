@@ -38,7 +38,7 @@ def create_output_dir(folder_path: str) -> Path:
             counter += 1
 
 
-def open_output_dir(output_dir):
+def open_output_dir(output_dir: Path) -> None:
     match platform.system():
         case "Windows":
             subprocess.run(["explorer", output_dir])
@@ -48,9 +48,9 @@ def open_output_dir(output_dir):
             subprocess.run(["xdg-open", output_dir])
     
 
-def merge_pdf(folder_path: str, files_per_file: str) -> dict:
+def merge_pdf(folder_path: str, files_per_file_input: str) -> dict:
     try:
-        files_per_file = int(files_per_file) 
+        files_per_file = int(files_per_file_input) 
         files_for_merge = batch_files(folder_path, files_per_file)    
         
         if not files_for_merge:

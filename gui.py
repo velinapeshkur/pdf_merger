@@ -4,20 +4,22 @@ from app import merge_pdf
 
 sg.theme("LightGrey1")
 
-label1 = sg.Text("Select folder:")
-input1 = sg.Input()
-choose_button = sg.FolderBrowse("Browse", key="folder")
+select_folder_label = sg.Text("Select folder:")
+select_folder_input = sg.Input()
+browse_button = sg.FolderBrowse("Browse", key="folder")
 
-label2 = sg.Text("Files per output file:")
-input2 = sg.Input(key="files")
+files_per_output_label = sg.Text("Files per output file:")
+files_per_output_input = sg.Input(key="files")
 
 merge_button = sg.Button("Merge", pad=(5,13))
 output_label = sg.Text(key="output")
 
 window = sg.Window("PDF Merger",
                    layout=[
-                       [label1], [input1, choose_button],
-                       [label2], [input2], 
+                       [select_folder_label], 
+                       [select_folder_input, browse_button],
+                       [files_per_output_label], 
+                       [files_per_output_input], 
                        [merge_button, output_label]],
                    font=("San Francisco", 14))
 
@@ -26,10 +28,10 @@ while True:
     match event:
         case sg.WIN_CLOSED:
             break
-        case _:        
+        case _:      
             folder_path = values["folder"]
-            files_per_file = values["files"]
-            response = merge_pdf(folder_path, files_per_file)
+            files_per_file_input = values["files"]
+            response = merge_pdf(folder_path, files_per_file_input)
             
             if response["success"]:
                 window["output"].update(value="Merge completed", 
