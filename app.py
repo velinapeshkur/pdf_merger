@@ -1,4 +1,3 @@
-import os
 import platform
 import subprocess
 from pypdf import PdfWriter
@@ -6,7 +5,7 @@ from pathlib import Path
 from itertools import batched
 
 
-def batch_files(folder_path: str, files_per_file: int) -> list[tuple[str]]:
+def batch_files(folder_path: str, files_per_file: int) -> list[tuple]:
     folder = Path(folder_path)
     files = []
     
@@ -15,7 +14,8 @@ def batch_files(folder_path: str, files_per_file: int) -> list[tuple[str]]:
             files.append(item.name)
     
     files_for_merge = list(batched(files, files_per_file))
-    return files_for_merge    
+
+    return files_for_merge
 
 
 def create_output_dir(folder_path: str) -> Path:
@@ -41,26 +41,36 @@ def create_output_dir(folder_path: str) -> Path:
 def open_output_dir(output_dir):
     match platform.system():
         case "Windows":
-            os.startfile(output_dir)
+            subprocess.run(["explorer", output_dir])
         case "Darwin": # macOS
             subprocess.run(["open", output_dir])
         case _: # Linux
             subprocess.run(["xdg-open", output_dir])
     
 
-def merge_pdf(folder_path: str, files_per_file: int) -> None: 
-    files_for_merge = batch_files(folder_path, files_per_file)
-    output_dir = create_output_dir(folder_path)
+def merge_pdf(folder_path: str, files_per_file: str) -> dict:
+    try:
+        files_per_file = int(files_per_file) 
+        files_for_merge = batch_files(folder_path, files_per_file)    
+        
+        if not files_for_merge:
+            return {"success": False, "error": "No PDF files to merge."}
 
-    # Merge each row of files to a new PDF file
-    for row in files_for_merge:
-        merger = PdfWriter()
-        pdf_name = f"{row[0][:5]} - {row[-1][:5]}" # Merged file name, can be customized
+        output_dir = create_output_dir(folder_path)
         
-        for pdf in row:
-            merger.append(f"{folder_path}/{pdf}")
+        # Merge each row of files to a new PDF file
+        for index, row in enumerate(files_for_merge):
+            merger = PdfWriter()
+            
+            for pdf in row:
+                merger.append(Path(folder_path) / pdf)
+            
+            with open(f"{output_dir.resolve()}/{index + 1}.pdf", "wb") as f:
+                merger.write(f)
         
-        with open(f"{output_dir.resolve()}/{pdf_name}.pdf", "wb") as f:
-            merger.write(f)
-    
-    open_output_dir(output_dir)
+        open_output_dir(output_dir)
+
+        return {"success": True}
+
+    except ValueError:
+        return {"success": False, "error": "Please enter a valid number."}

@@ -6,7 +6,7 @@ sg.theme("LightGrey1")
 
 label1 = sg.Text("Select folder:")
 input1 = sg.Input()
-choose_button = sg.FolderBrowse("Choose", key="folder")
+choose_button = sg.FolderBrowse("Browse", key="folder")
 
 label2 = sg.Text("Files per output file:")
 input2 = sg.Input(key="files")
@@ -26,11 +26,16 @@ while True:
     match event:
         case sg.WIN_CLOSED:
             break
-        case _:
+        case _:        
             folder_path = values["folder"]
-            files_per_file = int(values["files"])
-            merge_pdf(folder_path, files_per_file)
-            window["output"].update(value="Merge completed", 
-                                    text_color="green")
+            files_per_file = values["files"]
+            response = merge_pdf(folder_path, files_per_file)
             
+            if response["success"]:
+                window["output"].update(value="Merge completed", 
+                                        text_color="green")
+            else:
+                window["output"].update(value=response["error"], 
+                                        text_color="red")
+
 window.close()
